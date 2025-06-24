@@ -1,0 +1,64 @@
+## KJH 12/19/2024
+# this is the code for preparing the neuroquery maps to be used in the modeling
+  # primarily, this script moves the neuroquery data in to the same space as the HCP connectivity data.
+
+yourpath=insertyourpathhere
+hcppath=enteryourpathtoHCP
+  # the path you enter should have this file in it: 100307/MNINonLinear/fsaverage_LR32k/100307.L.midthickness_MSMAll.32k_fs_LR.surf.gii
+
+#########################
+### STEP 1: Prep data ###
+#########################
+# download maps from neuroquery: https://neuroquery.org/query?text=attention+in+reading
+# save the files under their name to $yourpath/NeuroQuery_inputs
+
+domain_list=$yourpath/domain_list
+# the domains used in Hiersche, Saygin, Osher, 2025: Connectivity and function are coupled across cognitive domains throughout the brain
+  # are in the provided domain_list
+
+# use mni4to2.sh to make them 2x2x2 instead of 4x4x4
+
+if [[ ! -d $yourpath/inputs_query_new/]]; then
+mkdir $yourpath/inputs_query_new/
+fi
+
+for i in `cat $domain_list`; do
+if [[ ! -f $yourpath/inputs_query_new/${i}_2.nii.gz ]]; then
+echo $i
+/fs/ess/PAS1305/ajuna/mni4to2.sh /fs/ess/PAS1305/ajuna/inputs_query/$i.nii.gz /fs/ess/PAS1305/ajuna/inputs_query_new/${i}_2.nii.gz
+fi; done
+
+module load connectome-workbench virtualgl
+  # code specific to loading connectome workbench on Ohio Supercomputer
+for i in `cat $domain_list`; do
+if [[ ! -f $yourpath/surf_query/$i.L.func.gii ]]; then
+${yourpath}/neuroquery2surf.sh $i $hcppath ${yourpath};
+fi
+done
+
+
+###########################
+## STEP 2: Run the model ##
+###########################
+
+# the model is run in matlab. We used matlab R2020a
+# I recommend running this code using a supercomputer
+# we submitted the job for 10 hours and alotted 16 GB of memory.
+
+
+# if you are just running the model in matlab:
+cd $yourpath
+HCP_neurosynth_model('domain_name')
+
+##################################
+## STEP 3: Run the permutations ##
+##################################
+# the model permutations are run in matlab. We used matlab R2020a
+# I recommend running this code using a supercomputer
+# we submitted the job for 5 hours and alotted 16 GB of memory.
+
+
+HCP_neurosynth_model_perm('$i',1000,yourhcppath,yourpath)
+
+yourpath should be the path where your scripts and the folders with the data are
+yourhcppath should include this: 100307/MNINonLinear/fsaverage_LR32k/100307.L.midthickness_MSMAll.32k_fs_LR.surf.gii & for R

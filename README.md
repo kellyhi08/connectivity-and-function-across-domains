@@ -1,0 +1,1 @@
+Here is the code used for "Connectivity and function are coupled across cognitive domains throughout the brain". Mean FC data across all participants will be uploaded following confirmation from HCP that this data is appropriately deidentified. 
